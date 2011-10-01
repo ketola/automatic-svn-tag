@@ -1,0 +1,129 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.codereanimator.svn</groupId>
+	<artifactId>automatic-svn-tag</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>automatic-svn-tag</name>
+	<url>http://maven.apache.org</url>
+
+	<properties>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+		<!-- These are properties for making the tag with exec -plugin -->
+		<svn.url>http://10.0.0.4/svn/</svn.url>
+		<svn.user>sauli</svn.user>
+		<svn.passw>xxxx</svn.passw>
+		<svn.tag>${maven.build.timestamp}</svn.tag>
+		<svn.revision>HEAD</svn.revision>
+	</properties>
+
+	<!-- This is required for the maven-scm-plugin -->
+	<scm>
+		<connection>scm:svn:http://10.0.0.4/svn/automatic-svn-tag/trunk/</connection>
+		<developerConnection>scm:svn:http://10.0.0.4/svn/automatic-svn-tag/trunk/</developerConnection>
+		<url>http://10.0.0.4/svn/automatic-svn-tag/trunk/</url>
+	</scm>
+
+	<dependencies>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>3.8.1</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<profiles>
+		<profile>
+			<id>release-tagWithMavenScm</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-scm-plugin</artifactId>
+						<inherited>false</inherited>
+						<version>1.5</version>
+						<configuration>
+							<tag>${maven.build.timestamp}</tag>
+						</configuration>
+						<executions>
+							<execution>
+								<id>svn-tag</id>
+								<phase>install</phase>
+								<goals>
+									<goal>tag</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+
+		<profile>
+			<id>release-tagWithExec</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>exec-maven-plugin</artifactId>
+						<version>1.2.1</version>
+						<inherited>false</inherited>
+						<executions>
+							<execution>
+								<phase>install</phase>
+								<id>svn-create-tag</id>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>svn</executable>
+									<arguments>
+										<argument>mkdir</argument>
+										<argument>-m</argument>
+										<argument>""</argument>
+										<argument>${svn.url}/automatic-svn-tag/tags/${svn.tag}</argument>
+										<argument>--username</argument>
+										<argument>${svn.user}</argument>
+										<argument>--password</argument>
+										<argument>${svn.passw}</argument>
+									</arguments>
+								</configuration>
+							</execution>
+							<execution>
+								<phase>install</phase>
+								<id>svn-copy</id>
+								<goals>
+									<goal>exec</goal>
+								</goals>
+								<configuration>
+									<executable>svn</executable>
+									<arguments>
+										<argument>copy</argument>
+										<argument>-r${svn.revision}</argument>
+										<argument>${svn.url}/automatic-svn-tag/trunk/automatic-svn-tag</argument>
+										<argument>${svn.url}/shared-utils/trunk/shared-utils</argument>
+										<argument>${svn.url}/automatic-svn-tag/tags/${svn.tag}</argument>
+										<argument>--username</argument>
+										<argument>${svn.user}</argument>
+										<argument>--password</argument>
+										<argument>${svn.passw}</argument>
+										<argument>--message</argument>
+										<argument>Tag ${svn.tag}</argument>
+									</arguments>
+								</configuration>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
+	<build>
+	</build>
+</project>
